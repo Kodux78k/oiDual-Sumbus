@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Dual.Infodose</title>
+<link href="manifest.json" rel="manifest"/>
+<meta content="#000000" name="theme-color"/>
+<link href="assets/icons/icon-192.png" rel="icon" type="image/png"/>
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+
+<body>
+<div id="assistantName"></div>
+<div class="content">
+<iframe class="active" id="frame" src="index.html"></iframe>
+</div>
+<div class="symbol-bar">
+<button class="symbol-button" onclick="loadPage('about:blank')">Φ</button>
+<button class="symbol-button" onclick="loadPage('dual-decoder-13.html')">꩜</button>
+<button class="symbol-button" onclick="loadPage('Splash_FINAL_TEMA_PULSO.html')">◌</button>
+<button class="symbol-button" onclick="loadPage('Raros.html')">☼</button>
+
+
+<button class="symbol-button" onclick="loadPage('Solashss.html')">◑</button>
+<button class="symbol-button" onclick="loadPage('dual-tube-25-0.html')">◘</button>
+
+</div>
+<button class="lock-button" onclick="loadPage('index.html')"></button>
+<!-- Botões -->
+<input accept=".html" id="uploadHTML" style="display:none" type="file"/>
+<button id="uploadComponentBtn">⧉</button>
+<button id="remoteComponentBtn">☍</button>
+<button id="toggleDecoderBtn">✦</button>
+<button id="btn-expandir-ritual">◉</button>
+<!-- Caixa do decodificador -->
+<div id="decoderBox">
+<input id="codeInput" placeholder="Digite o selo..." type="text"/>
+<button onclick="decodeSymbolicCode()">✦ Desbloquear</button>
+</div>
+<!-- COMPONENTE WEB -->
+
+<!-- Funções JS -->
+
+
+<!-- 🌌 Botões simbióticos -->
+
+
+
+<!-- 🌌 Camada Simbiótica Oculta -->
+<div id="pulsos-container">
+<div id="pulsos"></div>
+</div>
+
+<div id="koblluxPlayer" style="position:fixed;top:42px;left:20px;z-index:7;background:rgba(0,0,0,0.8);backdrop-filter:blur(9px);padding:5px;border-radius:10px;display:flex;flex-direction:column;gap:6px;transition:all 0.6s ease;max-width:199px;color:var(--text);font-family:monospace;">
+<button id="togglePlayer" style="font-size:20px;background:none;border:none;color:inherit;cursor:pointer;">
+    ≈
+   </button>
+<div class="hidden" id="playerWrapper">
+</div>
+<div id="playerControls" style="display:none;flex-direction:column;gap:8px;">
+<button id="playPause" style="font-size:22px;background:none;">
+     ►
+    </button>
+<select id="trackSelect">
+<option value="">
+      🎵 Escolha uma trilha
+     </option>
+<option value="Sono_Profundo">
+      🌙 Sono Profundo
+     </option>
+<option value="Manifestação">
+      ✨ Manifestação
+     </option>
+<option value="Ativação_Pineal">
+      🧠 Ativação Pineal
+     </option>
+<option value="Alívio_da_Ansiedade">
+      🌿 Alívio da Ansiedade
+     </option>
+<option value="Meditação_Theta">
+      ◉ Meditação Theta
+     </option>
+<option value="Viagem_Astral">
+      🌌 Viagem Astral
+     </option>
+<option value="Foco_Profundo">
+      🎯 Foco Profundo
+     </option>
+<option value="Flow_State">
+      🌊 Flow State
+     </option>
+<option value="Relaxamento_Rápido">
+      💤 Relaxamento Rápido
+     </option>
+<option value="Concentração_Sustentada">
+      📚 Concentração Sustentada
+     </option>
+<option value="Cura_Emocional">
+      💖 Cura Emocional
+     </option>
+<option value="Recuperação_Física">
+      🏋️ Recuperação Física
+     </option>
+<option value="matrix">
+      🧪 Matrix
+     </option>
+<option value="tesseract">
+      🧿 Tesseract
+     </option>
+</select>
+<select id="binauralSelect">
+<option value="">
+      🎶 Binaural Desativado
+     </option>
+<option value="Sono_Profundo">
+      🌙 Sono Profundo
+     </option>
+<option value="Manifestação">
+      ✨ Manifestação
+     </option>
+<option value="Ativação_Pineal">
+      🧠 Ativação Pineal
+     </option>
+<option value="Alívio_da_Ansiedade">
+      🌿 Alívio da Ansiedade
+     </option>
+<option value="Meditação_Theta">
+      ◉ Meditação Theta
+     </option>
+<option value="Viagem_Astral">
+      🌌 Viagem Astral
+     </option>
+<option value="Foco_Profundo">
+      🎯 Foco Profundo
+     </option>
+<option value="Flow_State">
+      🌊 Flow State
+     </option>
+<option value="Relaxamento_Rápido">
+      💤 Relaxamento Rápido
+     </option>
+<option value="Concentração_Sustentada">
+      📚 Concentração Sustentada
+     </option>
+<option value="Cura_Emocional">
+      💖 Cura Emocional
+     </option>
+<option value="Recuperação_Física">
+      🏋️ Recuperação Física
+     </option>
+<option value="matrix">
+      🧪 Matrix
+     </option>
+<option value="tesseract">
+      🧿 Tesseract
+     </option>
+</select>
+<label>
+     🎵 Volume Trilha
+     <input id="trackVolume" max="1" min="0" step="0.01" type="range" value="1"/>
+</label>
+<label>
+     🧘 Volume Binaural
+     <input id="binauralVolume" max="1" min="0" step="0.01" type="range" value="1"/>
+</label>
+</div>
+</div>
+<button id="themeToggle" title="Alternar tema"></button>
+<div id="particles-js"></div>
+<div class="svg-container" id="logoContainer">
+<object data="assets/icons/3D_logo_Dual_Infodose_10.png" id="logoObj" type="image/png"></object>
+</div>
+<div class="response-container" id="response">
+<div class="pages-wrapper">
+<div class="page initial active">
+<strong>Clique no ◉ e diga “Oi, Dual”.</strong>
+</div>
+</div>
+<p class="footer-text">
+<em>Do seu jeito. <strong>Sempre</strong> único. <strong>Sempre</strong> seu.</em>
+</p>
+<div class="response-controls">
+<div class="control-buttons">
+<button class="copy-button" title="Copiar">
+<object data="assets/icons/BW_quad_Dual_Infodose.svg" height="27" type="image/svg+xml" width="27"></object>
+</button>
+<button class="paste-button" title="Colar">
+<object data="assets/icons/BW_Dual_Infodose.svg" height="24" type="image/svg+xml" width="24"></object>
+</button>
+<button class="toggle-button" id="toggleBtn" title="Login Infodose">
+<object data="assets/icons/KBLX-pack/SuS-logo-1.PNG" height="33" type="image/png" width="33"></object>
+</button>
+<button class="kitty-button" id="kittyBtn" title="Estudos">
+<object data="assets/icons/DualKittyKard-icon-3.png" height="33" type="image/png" width="33"></object>
+</button>
+
+<button class="upload-symbolic-button" id="uploadFileBtn" title="Enviar Arquivo">
+  ⧉
+</button>
+<input type="file" id="symbolicFileInput" style="display: none;" accept=".txt,.html,.json,.pdf,.png,.jpg,.jpeg"/>
+
+</div>
+<div class="pagination">
+<button data-action="prev">⟵</button>
+<span id="pageIndicator">1 / 1</span>
+<button data-action="next">⟶</button>
+</div>
+</div>
+</div>
+<div class="input-container">
+<input id="userInput" placeholder="Diga: 'oi, Dual'..." type="text"/>
+<button id="sendBtn" title="Enviar">➤</button>
+<button id="voiceBtn" title="Falar">
+<object data="assets/icons/Reset_buttom_Dual-Infodose.svg" height="36" type="image/svg+xml" width="36"></object>
+</button>
+</div>
+<div class="login-container" id="loginBox">
+
+<div id="advancedToggleOptions" style="display:none;margin-top:12px;flex-direction:column;gap:10px;">
+  <input id="skInput" type="text" placeholder="🔑 Nova chave SK..." style="padding:8px;border-radius:8px;border:1px solid #0ff;background:rgba(0,0,0,0.2);color:#0ff;"/>
+  <input id="roleSystemInput" type="text" placeholder="📜 Role System..." style="padding:8px;border-radius:8px;border:1px solid #0ff;background:rgba(0,0,0,0.2);color:#0ff;"/>
+  <select id="modelSelector" style="padding:8px;border-radius:8px;background:rgba(0,0,0,0.2);color:#0ff;border:1px solid #0ff;">
+    <option value="">🤖 Selecione modelo</option>
+    <option value="deepseek/deepseek-chat-v3-0324:free">Deepseek v3</option>
+    <option value="openchat/openchat-3.5-1210:free">OpenChat 3.5</option>
+    <option value="mistralai/mixtral-8x7b:free">Mixtral</option>
+    <option value="meta-llama/llama-3-70b-instruct:free">LLaMA 3 70B</option>
+  </select>
+  <button onclick="salvarConfiguracoesAvancadas()" style="padding:8px;border-radius:8px;border:1px solid #0ff;background:#0ff;color:#000;font-weight:bold;">💾 Ativar Configurações</button>
+</div>
+
+<form id="loginForm">
+<input id="userName" placeholder="Nome do usuário" required="" type="text"/>
+<input id="assistantInput" placeholder="Nome dual.infodose" required="" type="text"/>
+<button type="submit">Ativar</button>
+</form>
+</div>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+
+
+
+
+
+
+
+
+<!-- Botão de Toggle -->
+<button id="togglePanelBtn">⚙️</button>
+
+<!-- Painel de controle simbiótico -->
+<div id="layoutTogglePanel">
+  <label><input type="checkbox" onchange="toggleElement('#response', this)"> Mostrar IA</label>
+  <label><input type="checkbox" onchange="toggleElement('.svg-container', this)"> Mostrar Logo</label>
+  <label><input type="checkbox" onchange="toggleElement('#koblluxPlayer', this)"> Mostrar Player</label>
+  <label><input type="checkbox" onchange="toggleElement('#uploadComponentBtn,#remoteComponentBtn,#toggleDecoderBtn', this)"> Mostrar Botões Laterais</label>
+  <label><input type="checkbox" onchange="toggleElement('.symbol-bar', this)"> Mostrar SymbolBar</label>
+  <hr/>
+  <button onclick="mostrarTodos()">Mostrar Todos</button>
+  <button onclick="ocultarTodos()">Ocultar Todos</button>
+  <hr/>
+  <button onclick="salvarEstadoUI()">Salvar Preferência</button>
+</div>
+
+<!-- Botão simbiótico do usuário -->
+<button id="userButton">☯ UserButton</button>
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="pages-wrapper" id="pagesWrapper"></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- KODUX_PATCH: normalize buttons + SR fallback, keep your CSS intact -->
+
+
+
+
+<button id="sumbus-toggle" title="SÜMBÜS – formatação + injeção">SÜMBÜS: ON</button>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<button id="aiConfigBtn" title="Configurar IA">🤖</button>
+
+<div id="aiConfigModal">
+  <div class="panel" id="aiPanel">
+    <div class="p-head">
+      <strong>Painel KODUX</strong>
+      <button id="aiClose" class="btn-close">✕</button>
+    </div>
+
+    <div class="p-body">
+      <div>
+        <div class="g-row" style="margin-bottom:8px; justify-content:space-between;">
+          <span>Botões/Links</span>
+          <div style="display:flex; gap:5px;">
+             <button id="addSymBtn" class="btn" style="flex:none; padding:4px 10px;">+</button>
+             <button id="resetSymBtn" class="btn" style="flex:none; padding:4px 10px;">♻</button>
+          </div>
+        </div>
+        <div id="symList"></div>
+      </div>
+
+      <div style="border-top:1px dashed var(--k-border); padding-top:10px;">
+        <div class="g-row" style="margin-bottom:5px; justify-content:space-between;">
+           <span>Code Map</span>
+           <button id="validateCodeBtn" class="btn" style="flex:none; width:auto;">Validar & Preview</button>
+        </div>
+        <textarea id="codeMapArea" rows="4" placeholder='{"NOME": "url.html"}'></textarea>
+        <div id="codeMapPreview" style="display:flex; flex-wrap:wrap; gap:5px; margin-top:5px;"></div>
+        <div id="iframeBox">
+          <div style="background:#222; text-align:right; padding:2px;"><button id="closeIframe" style="color:#fff; background:none; border:none;">✕</button></div>
+          <iframe id="previewFrame"></iframe>
+        </div>
+      </div>
+
+      <div style="border-top:1px dashed var(--k-border); padding-top:10px;">
+        <div class="g-row">
+          <input id="roleSystemField" placeholder="Role System..." />
+          <button id="embedToggle" class="btn" style="flex:0 0 auto;">Injetar</button>
+        </div>
+        <div class="g-row">
+          <input id="skField" type="password" placeholder="SK Key" />
+          <input id="modelField" placeholder="Model ID" />
+        </div>
+        <div class="g-row">
+          <input id="apiUrlField" placeholder="API URL" />
+          <input id="tempField" placeholder="0.7" style="flex:0 0 60px;" />
+        </div>
+      </div>
+    </div>
+
+    <div class="p-foot">
+      <div class="g-row" style="flex:1;">
+        <button id="exportBtn" class="btn">Exp ⬇</button>
+        <button id="importBtn" class="btn">Imp ⬆</button>
+        <input id="importFile" type="file" style="display:none" />
+      </div>
+      <div class="g-row" style="flex:1;">
+        <button id="applyBtn" class="btn">Aplicar</button>
+        <button id="saveBtn" class="btn btn-primary">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<script src="script.js"></script>
+</body>
+</html>

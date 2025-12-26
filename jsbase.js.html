@@ -1,0 +1,475 @@
+<script>
+/* ------------------------
+   Infodose - Consolidated JS
+   Replace all inline scripts with this one
+   ------------------------ */
+
+(() => {
+  /* --- Utility helpers --- */
+  const $ = (s) => document.querySelector(s);
+  const $$ = (s) => Array.from(document.querySelectorAll(s));
+  const on = (el, ev, fn) => el && el.addEventListener(ev, fn);
+  const exists = (v) => v !== null && v !== undefined;
+
+  /* --- Particles (if particlesJS available) --- */
+  try {
+    if (window.particlesJS) {
+      particlesJS('particles-js', {
+        particles: {
+          number: { value: 40 },
+          color: { value: ['#0ff', '#f0f'] },
+          shape: { type: 'circle' },
+          opacity: { value: 0.4 },
+          size: { value: 2.4 },
+          move: { enable: true, speed: 1.5 }
+        },
+        retina_detect: true
+      });
+    }
+  } catch (e) {
+    console.warn('particles init failed', e);
+  }
+
+  /* --- Frame modal webcomponent --- */
+  class MyFrameLoader extends HTMLElement {
+    constructor() {
+      super();
+      const shadow = this.attachShadow({ mode: 'open' });
+      shadow.innerHTML = `
+        <style>
+          .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);z-index:9999;display:flex;align-items:center;justify-content:center}
+          .container{width:92%;height:86%;background:#0b0b0b;border-radius:16px;overflow:hidden;position:relative;box-shadow:0 10px 40px rgba(0,0,0,0.6);}
+          iframe{width:100%;height:100%;border:0;background:#fff}
+          .close-btn{position:absolute;right:10px;top:10px;padding:6px 10px;border-radius:8px;border:none;background:#f0f;color:#000;cursor:pointer}
+        </style>
+        <div class="overlay">
+          <div class="container">
+            <button class="close-btn">✖</button>
+            <iframe></iframe>
+          </div>
+        </div>`;
+      this.iframe = shadow.querySelector('iframe');
+      shadow.querySelector('.close-btn').onclick = () => this.remove();
+    }
+    set src(u) { this.iframe.src = u; }
+    get src() { return this.iframe.src; }
+  }
+  customElements.define('my-frame-loader', MyFrameLoader);
+
+  /* --- UI sounds (safe) --- */
+  const uiSamples = {
+    click: new Audio('assets/sounds/uiSamples/navigation.wav'),
+    hover: new Audio('assets/sounds/uiSamples/hover.wav'),
+    confirm: new Audio('assets/sounds/uiSamples/confirm.wav')
+  };
+  Object.values(uiSamples).forEach(a => a && (a.volume = 0.35));
+
+  function playUI(name) {
+    const s = uiSamples[name];
+    if (s) { s.currentTime = 0; s.play().catch(()=>{}); }
+  }
+
+  /* --- Core elements --- */
+  const frame = $('#frame');
+  const uploadInput = $('#uploadHTML');
+  const uploadComponentBtn = $('#uploadComponentBtn');
+  const remoteComponentBtn = $('#remoteComponentBtn');
+  const toggleDecoderBtn = $('#toggleDecoderBtn');
+  const decoderBox = $('#decoderBox');
+  const btnExpandRitual = $('#btn-expandir-ritual');
+  const pulsos = $('#pulsos');
+  const sendBtn = $('#sendBtn');
+  const userInput = $('#userInput');
+  const togglePanelBtn = $('#togglePanelBtn');
+  const layoutTogglePanel = $('#layoutTogglePanel');
+  const aiConfigBtn = $('#aiConfigBtn');
+  const aiConfigModal = $('#aiConfigModal');
+  const aiClose = $('#aiClose');
+
+  /* --- Simple CONFIG & CODE_MAP --- */
+  const CODE_MAP = {
+    "DUAL": "menu.html", "KBX": "menu-x-1.html", "ATVR":"render-response.html",
+    "ATVD":"decodificador.html", "337":"KOBLLUX_MetaLux_CLEANED.html"
+    // extend as needed
+  };
+
+  /* --- helper: create frame modal with url --- */
+  function openModalFrame(url) {
+    const m = document.createElement('my-frame-loader');
+    m.src = url;
+    document.body.appendChild(m);
+    return m;
+  }
+
+  /* --- load page into main iframe gracefully --- */
+  function loadPage(url) {
+    if (!frame) return;
+    frame.classList.remove('active');
+    setTimeout(() => {
+      frame.src = url;
+      frame.onload = () => frame.classList.add('active');
+    }, 260);
+  }
+
+  /* --- upload HTML to frame modal --- */
+  on(uploadComponentBtn, 'click', () => {
+    playUI('click');
+    uploadInput && uploadInput.click();
+  });
+  if (uploadInput) {
+    uploadInput.onchange = (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      if (!file.name.match(/\.html?$/i)) {
+        alert('Selecione um arquivo .html');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const blob = new Blob([ev.target.result], { type: 'text/html' });
+        const blobUrl = URL.createObjectURL(blob);
+        openModalFrame(blobUrl);
+      };
+      reader.readAsText(file);
+    };
+  }
+
+  /* --- remote component button --- */
+  on(remoteComponentBtn, 'click', () => {
+    playUI('click');
+    const url = prompt('URL do componente remoto:');
+    if (url) openModalFrame(url);
+  });
+
+  /* --- decoder toggle --- */
+  if (toggleDecoderBtn && decoderBox) {
+    toggleDecoderBtn.onclick = () => {
+      playUI('click');
+      decoderBox.style.display = (decoderBox.style.display === 'block') ? 'none' : 'block';
+    };
+  }
+
+  function decodeSymbolicCode() {
+    playUI('confirm');
+    const code = ($('#codeInput')?.value || '').trim().toUpperCase();
+    const dest = CODE_MAP[code];
+    if (dest) {
+      openModalFrame(dest);
+      decoderBox.style.display = 'none';
+    } else {
+      alert('Selo desconhecido ou não registrado.');
+    }
+  }
+  window.decodeSymbolicCode = decodeSymbolicCode; // keep global for onclick attr
+
+  /* --- pulsos log --- */
+  function logMistico(msg) {
+    if (!pulsos) return;
+    const el = document.createElement('div');
+    el.className = 'debug-mistico pulso-item';
+    const now = new Date();
+    el.textContent = `[${now.toLocaleTimeString()}] ${msg}`;
+    pulsos.prepend(el);
+  }
+  function togglePulsosExpand() {
+    pulsos && pulsos.classList.toggle('expanded');
+    if (!pulsos.classList.contains('expanded')) pulsos.scrollTop = pulsos.scrollHeight;
+  }
+  on(btnExpandRitual, 'click', () => {
+    playUI('click');
+    togglePulsosExpand();
+    logMistico('Plano ritual alternado.');
+  });
+  on(pulsos, 'click', togglePulsosExpand);
+
+  /* --- simple cosmic click effect --- */
+  function spawnCosmicExplosion(x, y) {
+    const boom = document.createElement('div');
+    boom.style.position = 'absolute';
+    boom.style.left = (x - 8) + 'px';
+    boom.style.top = (y - 8) + 'px';
+    boom.style.width = boom.style.height = '16px';
+    boom.style.borderRadius = '50%';
+    boom.style.pointerEvents = 'none';
+    boom.style.background = 'radial-gradient(circle,#0ff,#f0f0f0,transparent)';
+    boom.style.opacity = '0.9';
+    boom.style.transition = 'opacity .6s, transform .6s';
+    document.body.appendChild(boom);
+    requestAnimationFrame(() => {
+      boom.style.transform = 'scale(2)';
+      boom.style.opacity = '0';
+    });
+    setTimeout(() => boom.remove(), 700);
+  }
+  document.addEventListener('click', (e) => {
+    spawnCosmicExplosion(e.clientX, e.clientY);
+    navigator.vibrate?.([5, 10]);
+    logMistico(`Pulso simbiótico em ${e.clientX},${e.clientY}`);
+  });
+
+  /* --- postMessage from iframe handler (safe) --- */
+  window.addEventListener('message', (ev) => {
+    const d = ev.data || {};
+    if (d.type === 'iframeClick') {
+      // find iframe if posted from internal frame; best-effort
+      const iframe = frame || document.querySelector('iframe');
+      if (!iframe) return;
+      const rect = iframe.getBoundingClientRect();
+      spawnCosmicExplosion(rect.left + (d.x || 0), rect.top + (d.y || 0));
+      logMistico(`Pulso no iframe em ${d.x},${d.y}`);
+    }
+  });
+
+  /* --- player controls --- */
+  on(document, 'DOMContentLoaded', () => {
+    const toggleBtn = $('#togglePlayer');
+    const controls = $('#playerControls');
+    const playPauseBtn = $('#playPause');
+    const trackSelect = $('#trackSelect');
+    const binauralSelect = $('#binauralSelect');
+    const trackVolume = $('#trackVolume');
+    const binauralVolume = $('#binauralVolume');
+
+    const trackAudio = new Audio();
+    const binauralAudio = new Audio();
+
+    if (toggleBtn && controls) {
+      toggleBtn.addEventListener('click', () => {
+        controls.style.display = (controls.style.display === 'flex') ? 'none' : 'flex';
+      });
+    }
+    if (playPauseBtn) {
+      playPauseBtn.addEventListener('click', () => {
+        if (trackAudio.src) trackAudio.paused ? trackAudio.play() : trackAudio.pause();
+        if (binauralAudio.src) binauralAudio.paused ? binauralAudio.play() : binauralAudio.pause();
+        playPauseBtn.textContent = (trackAudio.paused && binauralAudio.paused) ? '►' : '⏸';
+      });
+    }
+    if (trackSelect) {
+      trackSelect.addEventListener('change', () => {
+        if (trackSelect.value) {
+          trackAudio.src = `assets/sounds/trilhas/${trackSelect.value}.mp3`;
+          trackAudio.loop = true; trackAudio.volume = +(trackVolume?.value || 1);
+          trackAudio.play().catch(()=>{});
+          playPauseBtn && (playPauseBtn.textContent = '⏸');
+        } else {
+          trackAudio.pause(); trackAudio.src = '';
+        }
+      });
+    }
+    if (binauralSelect) {
+      binauralSelect.addEventListener('change', () => {
+        if (binauralSelect.value) {
+          binauralAudio.src = `assets/sounds/binaural/${binauralSelect.value}.wav`;
+          binauralAudio.loop = true; binauralAudio.volume = +(binauralVolume?.value || 1);
+          binauralAudio.play().catch(()=>{});
+        } else {
+          binauralAudio.pause(); binauralAudio.src = '';
+        }
+      });
+    }
+    on(trackVolume, 'input', () => { trackAudio.volume = +(trackVolume.value); });
+    on(binauralVolume, 'input', () => { binauralAudio.volume = +(binauralVolume.value); });
+  });
+
+  /* --- toggle panel --- */
+  on(togglePanelBtn, 'click', () => {
+    const panel = layoutTogglePanel;
+    if (!panel) return;
+    panel.style.display = (getComputedStyle(panel).display === 'none') ? 'flex' : 'none';
+  });
+
+  function toggleElement(selector, input) {
+    selector.split(',').forEach(s => {
+      $$(s).forEach(el => el.style.display = input.checked ? '' : 'none');
+    });
+  }
+  window.toggleElement = toggleElement;
+  window.mostrarTodos = () => ['#response', '.svg-container', '#koblluxPlayer', '#uploadComponentBtn', '#remoteComponentBtn', '#toggleDecoderBtn', '.symbol-bar'].forEach(sel => $$(sel).forEach(el => el.style.display = ''));
+  window.ocultarTodos = () => ['#response', '.svg-container', '#koblluxPlayer', '#uploadComponentBtn', '#remoteComponentBtn', '#toggleDecoderBtn', '.symbol-bar'].forEach(sel => $$(sel).forEach(el => el.style.display = 'none'));
+
+  /* --- save/load layout state --- */
+  function getDisplayState(selector) {
+    const el = document.querySelector(selector.split(',')[0]);
+    return el ? (el.style.display !== 'none') : true;
+  }
+  window.salvarEstadoUI = () => {
+    const estado = {
+      response: getDisplayState('#response'),
+      svg: getDisplayState('.svg-container'),
+      player: getDisplayState('#koblluxPlayer'),
+      botoes: getDisplayState('#uploadComponentBtn,#remoteComponentBtn,#toggleDecoderBtn'),
+      bar: getDisplayState('.symbol-bar')
+    };
+    localStorage.setItem('layoutConfig', JSON.stringify(estado));
+    logMistico('Preferência de layout salva.');
+  };
+  window.carregarEstadoUI = () => {
+    const saved = JSON.parse(localStorage.getItem('layoutConfig') || '{}');
+    Object.entries(saved).forEach(([key, visible]) => {
+      let sel;
+      if (key === 'response') sel = '#response';
+      if (key === 'svg') sel = '.svg-container';
+      if (key === 'player') sel = '#koblluxPlayer';
+      if (key === 'botoes') sel = '#uploadComponentBtn,#remoteComponentBtn,#toggleDecoderBtn';
+      if (key === 'bar') sel = '.symbol-bar';
+      sel && document.querySelectorAll(sel).forEach(el => el.style.display = visible ? '' : 'none');
+    });
+  };
+
+  /* --- renderResponse: unified, robust --- */
+  function splitIntoGroups(text) {
+    // naive grouping: split paragraphs, then group by 3
+    const para = text.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
+    if (para.length === 0) return [['(vazio)']];
+    const groups = [];
+    for (let i = 0; i < para.length; i += 3) groups.push(para.slice(i, i + 3));
+    return groups;
+  }
+
+  function renderResponseUnified(text) {
+    const wrap = document.querySelector('.pages-wrapper');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    const groups = splitIntoGroups(String(text || ''));
+    const titles = ['🎁 Recompensa Inicial', '👁️ Exploração', '⚡️ Antecipação'];
+
+    groups.forEach((grp, gi) => {
+      const pg = document.createElement('div');
+      pg.className = 'page' + (gi === 0 ? ' active' : '');
+      grp.forEach((para, j) => {
+        const cls = j === 0 ? 'intro' : j === 1 ? 'middle' : 'ending';
+        const block = document.createElement('div');
+        block.className = 'response-block ' + cls;
+        block.innerHTML = `<p>${para}</p>`;
+        block.addEventListener('click', () => {
+          // speak and expand
+          try {
+            const plain = para.replace(/<[^>]+>/g, '');
+            speechSynthesis.cancel();
+            speechSynthesis.speak(new SpeechSynthesisUtterance(plain));
+          } catch (e) {}
+          block.classList.toggle('expanded');
+          logMistico('Expandiu bloco');
+        });
+        pg.appendChild(block);
+      });
+      wrap.appendChild(pg);
+    });
+
+    // update page count indicator if exists
+    const ind = $('#pageIndicator');
+    if (ind) ind.textContent = `1 / ${groups.length}`;
+  }
+
+  window.renderResponse = renderResponseUnified;
+
+  /* --- AI call stub (keeps original API shape but safe) --- */
+  const CONFIG = {
+    API_URL: 'https://openrouter.ai/api/v1/chat/completions',
+    MODEL: 'deepseek/deepseek-chat-v3-0324:free',
+    TEMP: 0.2,
+    AUTH: '' // leave empty by default for safety; user can set in UI
+  };
+
+  async function callAI() {
+    // conversation is stored in local var in original code — keep simple: ask API if AUTH provided
+    try {
+      if (!CONFIG.AUTH) {
+        // simulate offline reply
+        const simulated = 'Modo Offline: recebi seu pulso. Configure a chave para obter respostas reais.';
+        renderResponseUnified(simulated);
+        return simulated;
+      }
+      // real call (kept minimal)
+      const res = await fetch(CONFIG.API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': CONFIG.AUTH
+        },
+        body: JSON.stringify({
+          model: CONFIG.MODEL,
+          messages: [], // fill as needed
+          temperature: CONFIG.TEMP
+        })
+      });
+      const payload = await res.json();
+      const ans = payload?.choices?.[0]?.message?.content || payload?.choices?.[0]?.text || 'Resposta vazia';
+      renderResponseUnified(ans);
+      return ans;
+    } catch (err) {
+      console.error('callAI error', err);
+      const fallback = 'Erro ao consultar a API — Modo fallback ativado.';
+      renderResponseUnified(fallback);
+      return fallback;
+    }
+  }
+  window.callAI = callAI;
+
+  /* --- form / send handlers --- */
+  function onSend() {
+    const raw = (userInput?.value || '').trim();
+    if (!raw) return;
+    userInput.value = '';
+    renderResponseUnified('Pulso enviado... Recebendo intenção…');
+    // push user message to conversation in your system if needed
+    callAI(); // will either simulate or call real API if AUTH set
+    playUI('confirm');
+  }
+  on(sendBtn, 'click', onSend);
+  on(userInput, 'keypress', (e) => { if (e.key === 'Enter') onSend(); });
+
+  /* --- voice recognition (optional) --- */
+  on($('#voiceBtn'), 'click', () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) { alert('Reconhecimento de voz não suportado'); return; }
+    try {
+      const rec = new SpeechRecognition();
+      rec.lang = 'pt-BR';
+      rec.start();
+      rec.onresult = (ev) => {
+        userInput.value = ev.results[0][0].transcript || '';
+        onSend();
+      };
+      playUI('click');
+    } catch (e) {
+      console.warn('voice init failed', e);
+    }
+  });
+
+  /* --- AI Config modal handlers (simple) --- */
+  if (aiConfigBtn && aiConfigModal) {
+    aiConfigBtn.addEventListener('click', () => aiConfigModal.style.display = 'flex');
+    aiClose && aiClose.addEventListener('click', () => aiConfigModal.style.display = 'none');
+  }
+
+  /* --- symbus toggle basic --- */
+  (function symbusInit(){
+    const b = $('#sumbus-toggle');
+    if (!b) return;
+    const K = 'SUMBUS_ACTIVE';
+    const saved = localStorage.getItem(K);
+    const active = saved === null ? true : saved === 'true';
+    b.textContent = active ? 'SÜMBÜS: ON' : 'SÜMBÜS: OFF';
+    b.style.color = active ? '#0ff' : '#888';
+    b.addEventListener('click', (ev) => {
+      const on = !(localStorage.getItem(K) === 'true');
+      localStorage.setItem(K, String(on));
+      b.textContent = on ? 'SÜMBÜS: ON' : 'SÜMBÜS: OFF';
+      b.style.color = on ? '#0ff' : '#888';
+    });
+  })();
+
+  /* --- init on DOMContentLoaded --- */
+  document.addEventListener('DOMContentLoaded', () => {
+    // restore layout preferences
+    window.carregarEstadoUI && window.carregarEstadoUI();
+    // small UI updates
+    const assistant = $('#assistantName');
+    if (assistant && !assistant.textContent.trim()) assistant.textContent = 'Dual.Infodose';
+    logMistico('Sistema pronto.');
+  });
+
+})(); // IIFE end
+</script>

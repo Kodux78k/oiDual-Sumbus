@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Dual.Infodose | Monolith System</title>
+<meta content="#000000" name="theme-color"/>
+
+<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+
+<style>
+/* =========================================
+   1. CORE VARIABLES & RESET
+   ========================================= */
+:root {
+  --bg-dark: #050505;
+  --bg-panel: rgba(10, 10, 10, 0.85);
+  --text-main: #d7d7d7;
+  --accent-cyan: #00ffff;
+  --accent-magenta: #ff00ff;
+  --glass: rgba(255, 255, 255, 0.05);
+  --border-glow: rgba(0, 255, 255, 0.2);
+  --font-main: 'Montserrat', monospace, sans-serif;
+  --fast: 0.3s;
+  --slow: 1.2s;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
+
+body {
+  width: 100%; height: 100vh; overflow: hidden;
+  background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+  color: var(--text-main);
+  font-family: var(--font-main);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+
+/* =========================================
+   2. UI COMPONENTS & LAYOUT
+   ========================================= */
+#particles-js { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+
+/* Central Iframe Area */
+.content {
+  width: 100%; height: 100%; position: relative; z-index: 1;
+  display: flex; align-items: center; justify-content: center;
+}
+iframe { width: 100%; height: 100%; border: none; opacity: 0; transition: opacity 0.6s; }
+iframe.active { opacity: 1; }
+
+/* Floating SVGs (Logo) */
+.svg-container {
+  position: absolute; top: 15%; left: 50%; transform: translateX(-50%);
+  width: 120px; height: 120px; z-index: 2; opacity: 0.8;
+  animation: floatLogo 6s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes floatLogo { 0%,100%{transform:translate(-50%,0)} 50%{transform:translate(-50%,-15px)} }
+
+/* Assistant Name */
+#assistantName {
+  position: absolute; top: 28%; left: 50%; transform: translateX(-50%);
+  font-size: 0.9em; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--accent-cyan); text-shadow: 0 0 10px var(--accent-cyan);
+  z-index: 2; font-weight: bold; pointer-events: none;
+}
+
+/* =========================================
+   3. CHAT INTERFACE
+   ========================================= */
+.response-container {
+  position: fixed; left: 20px; right: 20px; bottom: 110px;
+  max-height: 50vh; overflow-y: auto; z-index: 10;
+  padding: 10px; scrollbar-width: none;
+  display: flex; flex-direction: column-reverse; /* Mensagens novas embaixo */
+}
+.response-container::-webkit-scrollbar { display: none; }
+
+/* Response Blocks */
+.response-block {
+  margin: 12px 0; padding: 18px; border-radius: 16px;
+  background: rgba(0,0,0,0.6); border: 1px solid var(--border-glow);
+  backdrop-filter: blur(8px);
+  position: relative; overflow: hidden;
+  animation: slideUp 0.5s ease forwards;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+@keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+.response-block:hover { border-color: var(--accent-cyan); box-shadow: 0 0 15px rgba(0,255,255,0.1); }
+.response-block.intro { border-left: 3px solid var(--accent-cyan); }
+.response-block.middle { border-left: 3px solid #fff; }
+.response-block.ending { border-left: 3px solid var(--accent-magenta); }
+
+/* Typography inside blocks */
+.response-block p { line-height: 1.6; margin-bottom: 8px; }
+.response-block code { background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; color: #ffeb3b; }
+.response-block strong { color: #fff; }
+
+/* Input Area */
+.input-container {
+  position: fixed; bottom: 20px; left: 20px; right: 20px; height: 60px;
+  background: var(--bg-panel); border: 1px solid var(--border-glow);
+  border-radius: 30px; display: flex; align-items: center; padding: 0 10px;
+  z-index: 20; backdrop-filter: blur(10px);
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  transition: transform 0.3s;
+}
+.input-container input {
+  flex: 1; background: transparent; border: none; color: #fff;
+  padding: 10px 15px; font-size: 16px;
+}
+.input-container button {
+  background: transparent; border: none; cursor: pointer;
+  padding: 10px; display: flex; align-items: center; justify-content: center;
+  transition: transform 0.2s; color: var(--accent-cyan);
+}
+.input-container button:hover { transform: scale(1.1); text-shadow: 0 0 8px var(--accent-cyan); }
+.input-container button svg { width: 24px; height: 24px; fill: currentColor; }
+
+/* Control Bar (Footer) */
+.response-controls {
+  position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 12px; z-index: 15;
+}
+.ctrl-btn {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(0,0,0,0.6); border: 1px solid var(--glass);
+  color: var(--text-main); display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: 0.3s;
+}
+.ctrl-btn:hover { background: var(--accent-cyan); color: #000; box-shadow: 0 0 15px var(--accent-cyan); }
+.ctrl-btn svg { width: 20px; height: 20px; fill: currentColor; }
+.ctrl-btn.active { border-color: var(--accent-magenta); color: var(--accent-magenta); }
+
+/* =========================================
+   4. SIDEBARS & PANELS
+   ========================================= */
+/* Symbol Bar (Right) */
+.symbol-bar {
+  position: fixed; right: 15px; top: 50%; transform: translateY(-50%);
+  display: flex; flex-direction: column; gap: 15px; z-index: 30;
+}
+.symbol-btn {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(0,0,0,0.5); border: 1px solid var(--glass);
+  color: var(--text-main); cursor: pointer; transition: 0.3s;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+.symbol-btn:hover { border-color: var(--accent-magenta); color: var(--accent-magenta); transform: scale(1.1); }
+
+/* Left Action Buttons */
+.left-actions {
+  position: fixed; left: 15px; top: 50%; transform: translateY(-50%);
+  display: flex; flex-direction: column; gap: 15px; z-index: 30;
+}
+.action-btn {
+  width: 36px; height: 36px; border-radius: 8px;
+  background: rgba(0,0,0,0.5); border: 1px solid var(--border-glow);
+  color: var(--accent-cyan); cursor: pointer; transition: 0.3s;
+  font-size: 18px; display: flex; align-items: center; justify-content: center;
+}
+.action-btn:hover { background: var(--accent-cyan); color: #000; }
+
+/* Ritual / Pulse Log */
+#pulsos-container {
+  position: fixed; top: 120px; left: 50%; transform: translateX(-50%);
+  width: 300px; max-height: 0; overflow: hidden;
+  background: rgba(0,0,0,0.9); border: 1px solid var(--accent-magenta);
+  border-radius: 12px; z-index: 999; transition: max-height 0.4s ease;
+  display: flex; flex-direction: column;
+}
+#pulsos-container.expanded { max-height: 300px; padding: 10px; }
+#pulsos { overflow-y: auto; color: var(--accent-cyan); font-family: monospace; font-size: 12px; }
+.debug-mistico { margin-bottom: 4px; border-bottom: 1px solid #333; padding-bottom: 2px; }
+
+/* Expand Ritual Button */
+#btn-expandir-ritual {
+  position: fixed; bottom: 90px; right: 20px;
+  background: none; border: none; font-size: 24px;
+  background: linear-gradient(45deg, #0ff, #f0f); -webkit-background-clip: text; color: transparent;
+  cursor: pointer; z-index: 40; transition: transform 0.3s; opacity: 0.7;
+}
+#btn-expandir-ritual:hover { transform: scale(1.2) rotate(90deg); opacity: 1; }
+
+/* =========================================
+   5. MODALS (Login, Config, Player)
+   ========================================= */
+.modal {
+  display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 320px; background: rgba(10,10,10,0.95); border: 1px solid var(--accent-cyan);
+  border-radius: 12px; padding: 20px; z-index: 1000;
+  box-shadow: 0 0 30px rgba(0,255,255,0.2);
+}
+.modal.active { display: block; animation: fadeIn 0.3s; }
+.modal input, .modal select {
+  width: 100%; margin: 8px 0; padding: 8px; background: #222;
+  border: 1px solid #444; color: #fff; border-radius: 6px;
+}
+.modal button {
+  width: 100%; padding: 10px; background: var(--accent-cyan); color: #000;
+  border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px;
+}
+
+/* Player Mini */
+#koblluxPlayer {
+  position: fixed; top: 20px; left: 20px; z-index: 50;
+  transition: 0.3s;
+}
+#playerToggle {
+  width: 40px; height: 40px; border-radius: 50%; background: rgba(0,0,0,0.7);
+  border: 1px solid var(--accent-cyan); color: var(--accent-cyan);
+  font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+#playerBody {
+  display: none; position: absolute; top: 50px; left: 0;
+  background: rgba(0,0,0,0.9); border: 1px solid var(--accent-cyan);
+  padding: 10px; border-radius: 10px; width: 200px;
+}
+#playerBody.open { display: block; }
+
+/* SÜMBÜS Toggle */
+#sumbus-toggle {
+  position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+  background: rgba(0,0,0,0.5); border: 1px solid var(--accent-cyan);
+  color: var(--accent-cyan); padding: 4px 12px; border-radius: 20px;
+  font-size: 11px; cursor: pointer; z-index: 60;
+  text-transform: uppercase; letter-spacing: 1px;
+}
+
+/* Utility */
+.hidden { display: none !important; }
+@keyframes pulse { 0%{opacity:0.6} 50%{opacity:1} 100%{opacity:0.6} }
+</style>
+</head>
+
+<body>
+
+<div id="particles-js"></div>
+
+<div class="svg-container">
+  <svg viewBox="0 0 100 100" fill="none" stroke="cyan" stroke-width="2" style="filter: drop-shadow(0 0 5px cyan);">
+    <polygon points="50,10 90,30 90,70 50,90 10,70 10,30" stroke="magenta" stroke-width="1" opacity="0.6"/>
+    <polygon points="50,20 80,35 80,65 50,80 20,65 20,35" />
+    <circle cx="50" cy="50" r="5" fill="#fff" />
+    <line x1="50" y1="20" x2="50" y2="50" />
+    <line x1="80" y1="35" x2="50" y2="50" />
+    <line x1="20" y1="35" x2="50" y2="50" />
+  </svg>
+</div>
+
+<div id="assistantName">Dual.Infodose</div>
+
+<div class="content">
+  <iframe id="frame" src="about:blank"></iframe>
+</div>
+
+<div class="symbol-bar">
+  <button class="symbol-btn" onclick="loadPage('about:blank')" title="Blank">Φ</button>
+  <button class="symbol-btn" onclick="logMistico('Selo 1 Ativado')" title="Selo 1">꩜</button>
+  <button class="symbol-btn" onclick="logMistico('Selo 2 Ativado')" title="Selo 2">◌</button>
+  <button class="symbol-btn" onclick="logMistico('Selo 3 Ativado')" title="Selo 3">☼</button>
+</div>
+
+<div class="left-actions">
+  <button class="action-btn" id="uploadComponentBtn" title="Upload HTML">⧉</button>
+  <button class="action-btn" id="toggleDecoderBtn" title="Decodificador">✦</button>
+  <button class="action-btn" id="aiConfigBtn" title="Configurar IA">🤖</button>
+</div>
+
+<div id="koblluxPlayer">
+  <button id="playerToggle">♫</button>
+  <div id="playerBody">
+    <select id="trackSelect">
+      <option value="">-- Trilha Sonora --</option>
+      <option value="focus">Foco Profundo</option>
+      <option value="sleep">Sono & Sonhos</option>
+      <option value="matrix">Matrix Mode</option>
+    </select>
+    <div style="margin-top:5px; display:flex; gap:5px; align-items:center;">
+      <button id="playPauseBtn" style="width:auto; flex:1;">►</button>
+      <input type="range" id="volRange" min="0" max="1" step="0.1" value="0.5" style="width:60px;">
+    </div>
+  </div>
+</div>
+
+<button id="sumbus-toggle">SÜMBÜS: ON</button>
+
+<div id="pulsos-container">
+  <div class="debug-mistico" style="color:#fff; text-align:center;">--- RITUAL LOG ---</div>
+  <div id="pulsos"></div>
+</div>
+<button id="btn-expandir-ritual" title="Expandir Ritual">◉</button>
+
+<div class="response-container" id="responseWrapper">
+  <div class="response-block intro">
+    <p><strong>Olá.</strong> Eu sou Dual.Infodose.</p>
+    <p>O sistema está online e pronto. Diga "Oi" para iniciar a conexão simbiótica.</p>
+  </div>
+</div>
+
+<div class="response-controls">
+  <button class="ctrl-btn" id="toggleLoginBtn" title="Login">
+    <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+  </button>
+  <button class="ctrl-btn" id="kittyBtn" title="Modo Estudos">
+    <svg viewBox="0 0 24 24"><path d="M12 3L1 9l11 6 9-4.91V17h2V9M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>
+  </button>
+  <button class="ctrl-btn copy-btn" title="Copiar Conversa">
+    <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+  </button>
+</div>
+
+<div class="input-container">
+  <input type="text" id="userInput" placeholder="Digite seu comando..." autocomplete="off">
+  <button id="voiceBtn" title="Falar">
+    <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+  </button>
+  <button id="sendBtn" title="Enviar">
+    <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+  </button>
+</div>
+
+<div id="loginModal" class="modal">
+  <h3 style="color:#0ff; text-align:center; margin-bottom:10px;">Identificação</h3>
+  <form id="loginForm">
+    <input id="userName" placeholder="Nome do Usuário" required>
+    <input id="assistantInput" placeholder="Nome do Assistente" required>
+    <button type="submit">Conectar</button>
+  </form>
+  <button onclick="document.getElementById('loginModal').classList.remove('active')" style="background:#333; color:#fff;">Fechar</button>
+</div>
+
+<div id="decoderBox" class="modal">
+  <h3 style="color:#f0f; text-align:center;">Decodificador</h3>
+  <input id="codeInput" placeholder="Digite o Selo Hex...">
+  <button onclick="decodeSymbolicCode()">✦ Desbloquear</button>
+  <button onclick="document.getElementById('decoderBox').classList.remove('active')" style="background:#333; color:#fff;">Fechar</button>
+</div>
+
+<div id="aiConfigModal" class="modal" style="width: 90%; max-width: 600px;">
+  <h3 style="color:#0ff;">Configurações do Núcleo</h3>
+  <div style="display:flex; gap:10px;">
+    <input id="skInput" type="password" placeholder="API Key (OpenRouter/OpenAI)">
+    <input id="modelInput" placeholder="Modelo (ex: deepseek/deepseek-chat-v3-0324:free)">
+  </div>
+  <textarea id="systemPrompt" style="width:100%; height:100px; background:#222; color:#fff; border:1px solid #444; margin:10px 0;" placeholder="Role System Prompt..."></textarea>
+  <div style="display:flex; gap:10px;">
+    <button onclick="saveAIConfig()">Salvar</button>
+    <button onclick="document.getElementById('aiConfigModal').classList.remove('active')" style="background:#333; color:#fff;">Cancelar</button>
+  </div>
+</div>
+
+<input type="file" id="uploadHTML" accept=".html" style="display:none">
+
+<script>
+/* 1. PARTICLES INIT */
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.particlesJS) {
+    particlesJS('particles-js', {
+      particles: {
+        number: { value: 40 },
+        color: { value: ['#00ffff', '#ff00ff'] },
+        shape: { type: 'circle' },
+        opacity: { value: 0.5 },
+        size: { value: 2 },
+        line_linked: { enable: true, distance: 150, color: '#ffffff', opacity: 0.2, width: 1 },
+        move: { enable: true, speed: 1.5 }
+      },
+      interactivity: { detect_on: 'canvas', events: { onhover: { enable: true, mode: 'repulse' } } },
+      retina_detect: true
+    });
+  }
+});
+
+/* 2. CORE SYSTEM & AUDIO */
+const uiSounds = {
+  click: new Audio('assets/sounds/uiSamples/navigation.wav'), // Caminho mantido, falha silenciosa se não existir
+  confirm: new Audio('assets/sounds/uiSamples/confirm.wav'),
+  typing: new Audio('assets/sounds/uiSamples/hover.wav')
+};
+
+// Fail-safe sound player
+function playSound(type) {
+  try {
+    const s = uiSounds[type];
+    if (s) { s.currentTime = 0; s.volume = 0.3; s.play().catch(() => {}); }
+  } catch (e) { /* Ignore audio errors */ }
+}
+
+/* 3. LOGIC UTILS */
+const pulsos = document.getElementById("pulsos");
+const pulsosContainer = document.getElementById("pulsos-container");
+
+function logMistico(msg) {
+  const el = document.createElement("div");
+  el.className = "debug-mistico";
+  el.innerText = `[${new Date().toLocaleTimeString()}] ◉ ${msg}`;
+  pulsos.appendChild(el);
+  pulsos.scrollTop = pulsos.scrollHeight;
+  console.log("🔮 " + msg);
+}
+
+document.getElementById('btn-expandir-ritual').onclick = () => {
+  pulsosContainer.classList.toggle('expanded');
+  playSound('click');
+};
+
+/* 4. CHAT & AI LOGIC */
+let isStudying = false;
+let conversation = [];
+const CONFIG = {
+  key: localStorage.getItem('INFODOSE_SK') || '',
+  model: localStorage.getItem('INFODOSE_MODEL') || 'deepseek/deepseek-chat-v3-0324:free',
+  system: localStorage.getItem('INFODOSE_SYS') || 'Você é Dual.Infodose, uma IA simbiótica, mística e eficiente.'
+};
+
+function renderResponse(text) {
+  const container = document.getElementById('responseWrapper');
+  // Cria blocos baseados em quebras duplas
+  const parts = text.split(/\n\s*\n/).filter(x => x.trim());
+  
+  parts.forEach((part, idx) => {
+    const div = document.createElement('div');
+    const type = idx === 0 ? 'intro' : (idx === parts.length - 1 ? 'ending' : 'middle');
+    div.className = `response-block ${type}`;
+    
+    // Markdown simples e formatação SÜMBÜS
+    let formatted = part
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/\[(.+?)\]/g, `<span style="color:#0ff; cursor:pointer;" onclick="logMistico('Sinal: $1')">[$1]</span>`);
+      
+    div.innerHTML = `<p>${formatted}</p>`;
+    div.onclick = () => {
+       playSound('click');
+       const u = new SpeechSynthesisUtterance(div.innerText);
+       speechSynthesis.cancel();
+       speechSynthesis.speak(u);
+    };
+    container.prepend(div); // Novas mensagens no topo da pilha visual (flex-reverse lida com isso)
+  });
+}
+
+async function callAI(prompt) {
+  if (!CONFIG.key && !prompt.includes('Dual')) {
+    renderResponse("⚠️ Chave API não configurada. Use o botão 🤖 para configurar.");
+    return;
+  }
+  
+  const userMsg = { role: 'user', content: prompt };
+  conversation.push(userMsg);
+  
+  renderResponse(`Processing... ⏳`); // Placeholder
+  
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${CONFIG.key}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: CONFIG.model,
+        messages: [{role:'system', content: CONFIG.system}, ...conversation]
+      })
+    });
+    
+    const data = await res.json();
+    if (data.choices && data.choices[0]) {
+      const reply = data.choices[0].message.content;
+      conversation.push({ role: 'assistant', content: reply });
+      // Remove placeholder (simplificado aqui, na real removeríamos o elemento)
+      document.querySelector('.response-block').remove(); 
+      renderResponse(reply);
+      logMistico("Resposta recebida do Núcleo.");
+    } else {
+      throw new Error("Resposta inválida da API");
+    }
+  } catch (e) {
+    console.error(e);
+    // Simulação se não tiver API key
+    setTimeout(() => {
+       document.querySelector('.response-block').remove();
+       renderResponse(`**Modo Offline:** Recebi seu pulso: "${prompt}".\n\n(Configure a API Key para inteligência real).`);
+    }, 1000);
+  }
+}
+
+/* 5. EVENT LISTENERS */
+const input = document.getElementById('userInput');
+const sendBtn = document.getElementById('sendBtn');
+
+function sendMessage() {
+  const txt = input.value.trim();
+  if (!txt) return;
+  
+  // Visual do usuário
+  const userDiv = document.createElement('div');
+  userDiv.className = 'response-block';
+  userDiv.style.borderLeft = '3px solid #666';
+  userDiv.style.alignSelf = 'flex-end'; // Se não usar flex-reverse
+  userDiv.innerHTML = `<p style="color:#aaa;">Você: ${txt}</p>`;
+  document.getElementById('responseWrapper').prepend(userDiv);
+  
+  callAI(txt);
+  input.value = '';
+  playSound('confirm');
+}
+
+sendBtn.onclick = sendMessage;
+input.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+
+// Voice Button
+document.getElementById('voiceBtn').onclick = () => {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SpeechRecognition) {
+    const rec = new SpeechRecognition();
+    rec.lang = 'pt-BR';
+    rec.start();
+    rec.onstart = () => logMistico("Ouvindo...");
+    rec.onresult = (e) => {
+      input.value = e.results[0][0].transcript;
+      sendMessage();
+    };
+  } else {
+    alert("Reconhecimento de voz não suportado neste navegador.");
+  }
+};
+
+/* 6. MODALS & CONFIG */
+// Upload Component
+document.getElementById('uploadComponentBtn').onclick = () => document.getElementById('uploadHTML').click();
+document.getElementById('uploadHTML').onchange = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    const url = URL.createObjectURL(file);
+    document.getElementById('frame').src = url;
+    document.getElementById('frame').classList.add('active');
+    logMistico(`Componente carregado: ${file.name}`);
+  }
+};
+
+// Decoder
+document.getElementById('toggleDecoderBtn').onclick = () => {
+  document.getElementById('decoderBox').classList.add('active');
+};
+window.decodeSymbolicCode = () => {
+  const code = document.getElementById('codeInput').value.toUpperCase();
+  logMistico(`Decodificando selo: ${code}`);
+  alert(`Selo ${code} registrado no sistema.`);
+  document.getElementById('decoderBox').classList.remove('active');
+};
+
+// AI Config
+document.getElementById('aiConfigBtn').onclick = () => {
+  document.getElementById('skInput').value = CONFIG.key;
+  document.getElementById('modelInput').value = CONFIG.model;
+  document.getElementById('systemPrompt').value = CONFIG.system;
+  document.getElementById('aiConfigModal').classList.add('active');
+};
+
+window.saveAIConfig = () => {
+  CONFIG.key = document.getElementById('skInput').value;
+  CONFIG.model = document.getElementById('modelInput').value;
+  CONFIG.system = document.getElementById('systemPrompt').value;
+  
+  localStorage.setItem('INFODOSE_SK', CONFIG.key);
+  localStorage.setItem('INFODOSE_MODEL', CONFIG.model);
+  localStorage.setItem('INFODOSE_SYS', CONFIG.system);
+  
+  document.getElementById('aiConfigModal').classList.remove('active');
+  logMistico("Configurações do Núcleo salvas.");
+};
+
+// Login Toggle
+document.getElementById('toggleLoginBtn').onclick = () => {
+  document.getElementById('loginModal').classList.add('active');
+};
+document.getElementById('loginForm').onsubmit = (e) => {
+  e.preventDefault();
+  const user = document.getElementById('userName').value;
+  const assist = document.getElementById('assistantInput').value;
+  document.getElementById('assistantName').innerText = `${assist} Dual.Infodose`;
+  document.getElementById('loginModal').classList.remove('active');
+  logMistico(`Usuário ${user} conectado.`);
+};
+
+// Kitty Mode
+document.getElementById('kittyBtn').onclick = () => {
+  isStudying = !isStudying;
+  logMistico(isStudying ? "Modo Estudos Ativado 🐱" : "Modo Estudos Desativado");
+  document.getElementById('assistantName').style.color = isStudying ? '#ffeb3b' : '#00ffff';
+};
+
+// Copy
+document.querySelector('.copy-btn').onclick = () => {
+  const text = document.getElementById('responseWrapper').innerText;
+  navigator.clipboard.writeText(text);
+  logMistico("Conteúdo copiado para a área de transferência.");
+};
+
+// SÜMBÜS Toggle logic
+const sumbusBtn = document.getElementById('sumbus-toggle');
+let sumbusActive = true;
+sumbusBtn.onclick = () => {
+  sumbusActive = !sumbusActive;
+  sumbusBtn.innerText = sumbusActive ? "SÜMBÜS: ON" : "SÜMBÜS: OFF";
+  sumbusBtn.style.color = sumbusActive ? "cyan" : "gray";
+  logMistico(`Protocolo SÜMBÜS: ${sumbusActive ? 'Ativo' : 'Inativo'}`);
+};
+
+// Player Logic
+const playerBody = document.getElementById('playerBody');
+const trackSelect = document.getElementById('trackSelect');
+const playPause = document.getElementById('playPauseBtn');
+let audio = new Audio();
+
+document.getElementById('playerToggle').onclick = () => {
+  playerBody.classList.toggle('open');
+};
+
+trackSelect.onchange = () => {
+  if (trackSelect.value) {
+    // Caminho simulado - se não existir, não toca, mas não quebra o app
+    audio.src = `assets/sounds/trilhas/${trackSelect.value}.mp3`;
+    audio.play().catch(e => console.log("Audio file not found (local mode)"));
+    playPause.innerText = "⏸";
+  }
+};
+
+playPause.onclick = () => {
+  if (audio.paused && audio.src) {
+    audio.play();
+    playPause.innerText = "⏸";
+  } else {
+    audio.pause();
+    playPause.innerText = "►";
+  }
+};
+
+document.getElementById('volRange').oninput = (e) => {
+  audio.volume = e.target.value;
+};
+
+</script>
+</body>
+</html>
