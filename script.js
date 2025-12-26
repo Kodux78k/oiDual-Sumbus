@@ -1,5 +1,113 @@
 
+/* ---------- SÜMBÜS: fix seguro (substituir bloco corrompido) ---------- */
+(function(){
+  if (window.__SUMBUS_IIFE__) return; window.__SUMBUS_IIFE__ = true;
 
+  function findToggle(){
+    let el = document.querySelector('[data-symbus-toggle]');
+    if (el) return el;
+    const all = Array.from(document.querySelectorAll('button, [role="button"], .btn, .chip, .pill'));
+    return all.find(b => /s[üu]mb[üu]s|symbols|símbolos/i.test((b.innerText||'').trim()));
+  }
+
+  function label(on){ return `SÜMBÜS ∴ ${on ? 'ON' : 'OFF'}`; }
+
+  function setLabel(el, on){
+    if (!el) return;
+    el.classList.add('symbus-toggle');
+    const slot = el.querySelector('[data-label]');
+    if (slot) slot.textContent = label(on);
+    else el.textContent = label(on);
+  }
+
+  function pulse(el){
+    if (!el) return;
+    el.classList.remove('ring-pulse');
+    void el.offsetWidth;
+    el.classList.add('ring-pulse');
+  }
+
+  const prevApply = window.__symbus_apply;
+  window.__symbus_apply = function(on){
+    const result = prevApply ? prevApply(on) : undefined;
+    try {
+      const el = findToggle();
+      setLabel(el, on);
+      pulse(el);
+      el?.setAttribute('aria-pressed', on ? 'true' : 'false');
+    } catch(e) { /* silent */ }
+    return result;
+  };
+
+  function init(){
+    try {
+      const stored = (localStorage.getItem('dual_symbols')||'on') === 'on';
+      const el = findToggle();
+      if (el) setLabel(el, stored);
+    } catch(e){}
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+
+/* ---------- particles.js safe init (garante que lib carregou) ---------- */
+(function(){
+  function initParticles(){
+    if (!window.particlesJS) {
+      console.warn('particlesJS não disponível — verifique CDN/path');
+      return;
+    }
+    try {
+      particlesJS('particles-js', {
+        particles: {
+          number: { value: 40 },
+          color: { value: ['#00ffff', '#ff00ff'] },
+          shape: { type: 'circle' },
+          opacity: { value: 0.5 },
+          size: { value: 2 },
+          line_linked: { enable: true, distance: 150, color: '#ffffff', opacity: 0.18, width: 1 },
+          move: { enable: true, speed: 1.5 }
+        },
+        interactivity: { detect_on: 'canvas', events: { onhover: { enable: true, mode: 'repulse' } } },
+        retina_detect: true
+      });
+      console.info('particlesJS inicializado');
+    } catch(e) {
+      console.error('Erro ao inicializar particlesJS', e);
+    }
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initParticles);
+  else initParticles();
+})();
+
+/* ---------- decodeSymbolicCode seguro (usa seu CODE_MAP já existente) ---------- */
+function decodeSymbolicCode(){
+  try {
+    const raw = (document.getElementById('codeInput')?.value || '').trim();
+    if (!raw) { alert('Digite um selo'); return; }
+    const key = raw.toString().toUpperCase();
+    // permite buscar por variações: ex 'orc' -> 'Orc' etc.
+    const dest = (typeof CODE_MAP !== 'undefined') && (CODE_MAP[key] || CODE_MAP[key.toLowerCase()] || CODE_MAP[raw] || CODE_MAP[raw.replace(/\s+/g,'')]);
+    if (dest) {
+      // abre em modal custom element se disponível, senão abre em nova aba
+      if (window.customElements && customElements.get('my-frame-loader')) {
+        const m = document.createElement('my-frame-loader');
+        m.src = dest;
+        document.body.appendChild(m);
+      } else {
+        window.open(dest, '_blank');
+      }
+      document.getElementById('decoderBox')?.style && (document.getElementById('decoderBox').style.display = 'none');
+    } else {
+      alert('Selo desconhecido ou não registrado: ' + raw);
+    }
+  } catch (e) {
+    console.error('decodeSymbolicCode erro', e);
+    alert('Erro ao decodificar o selo (ver console).');
+  }
+}
 /* extracted scripts from oiDual-menu-v9.html */
 
 class MyFrameLoader extends HTMLElement {
